@@ -1,0 +1,29 @@
+[project]
+name = "qwen2p5vl-webui"
+version = "0.1.0"
+description = "Web UI to batch OCR/describe PDFs and images via mlx_vlm.generate"
+authors = [{ name = "samni" }]
+requires-python = ">=3.10,<3.13"
+readme = "README.md"
+
+dependencies = [
+  "fastapi==0.115.0",
+  "uvicorn[standard]==0.30.6",
+  "python-multipart==0.0.9",
+  "pydantic==2.9.2",
+  "pillow==10.4.0",
+  "PyMuPDF==1.24.9",
+  "starlette==0.38.5",
+  "mlx-vlm>=0.3.3",
+  "torch==2.4.1",
+  "torchvision==0.19.1",
+]
+
+[tool.uv]
+index-url = "https://pypi.org/simple"
+
+[project.scripts]
+qwen-webui = "server.main:app"
+
+[tool.uv.sources]
+# 可以在此添加私有源

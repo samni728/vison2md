@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  vision-ai-webui:
+    build: .
+    container_name: vision-ai-webui
+    ports:
+      - "8000:8000"
+    volumes:
+      # 挂载输出目录，保存处理结果
+      - ./outputs:/app/outputs
+      # 挂载上传目录，临时文件
+      - ./uploads:/app/uploads
+      # 挂载配置目录，保存用户配置
+      - ./config:/app/config
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # 可选：添加Redis服务用于缓存（如果需要）
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: vision-ai-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   restart: unless-stopped
+# volumes:
+#   redis_data:

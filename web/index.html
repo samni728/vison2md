@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vision AI 批量处理工具</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Vision AI 批量处理工具</h1>
+        <p>
+          基于视觉大模型的智能文档处理平台 - 支持 PDF OCR、图片识别、文档打标签
+        </p>
+      </header>
+
+      <section class="form">
+        <!-- 模型配置 -->
+        <div class="config-section collapsible">
+          <div class="config-header" onclick="toggleConfig('model-config')">
+            <h3>🔧 模型配置</h3>
+            <span class="toggle-icon" id="model-config-icon">▶</span>
+          </div>
+          <div class="config-content" id="model-config">
+            <div class="field">
+              <label>模型配置方式</label>
+              <select id="model_type">
+                <option value="local">本地MLX模型</option>
+                <option value="api">API调用</option>
+              </select>
+            </div>
+
+            <div id="local_model_config">
+              <div class="field">
+                <label>MLX模型路径</label>
+                <input
+                  id="model_path"
+                  type="text"
+                  placeholder="/Users/.../Qwen2.5-VL-7B-Instruct-4bit-mlx"
+                />
+              </div>
+              <div class="field">
+                <button
+                  type="button"
+                  id="save_local_model_btn"
+                  class="save-btn"
+                >
+                  💾 保存本地模型配置
+                </button>
+              </div>
+            </div>
+
+            <div id="api_model_config" style="display: none">
+              <div class="field">
+                <label>API基础URL</label>
+                <input
+                  id="base_url"
+                  type="text"
+                  placeholder="https://api.openai.com/v1/chat/completions"
+                />
+              </div>
+              <div class="field">
+                <label>API密钥</label>
+                <input id="api_key" type="password" placeholder="sk-..." />
+              </div>
+              <div class="field">
+                <label>模型名称</label>
+                <input
+                  id="model_name"
+                  type="text"
+                  placeholder="gpt-4-vision-preview"
+                />
+              </div>
+              <div class="field">
+                <button type="button" id="save_model_btn" class="save-btn">
+                  💾 保存模型配置
+                </button>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label>Max Tokens</label>
+                <input id="max_tokens" type="number" value="1024" min="1" />
+              </div>
+              <div class="field">
+                <label>Temperature</label>
+                <input
+                  id="temperature"
+                  type="number"
+                  value="0"
+                  step="0.1"
+                  min="0"
+                  max="1"
+                />
+              </div>
+            </div>
+
+            <!-- PDF处理参数 -->
+            <div id="pdf_processing_config" class="field" style="display: none">
+              <label>PDF最大处理页数</label>
+              <input
+                id="max_pages"
+                type="number"
+                value="10"
+                min="1"
+                max="20"
+                title="限制PDF处理的页数，避免内存不足"
+              />
+              <small style="color: var(--muted); font-size: 12px">
+                批次大小：8GB内存=5页/批次，16GB内存=10页/批次，32GB内存=20页/批次<br />
+                📝 大文档会自动分批处理，确保所有页面都被处理
+              </small>
+            </div>
+
+            <!-- 图片批次处理参数 -->
+            <div id="image_batch_config" class="field" style="display: none">
+              <label>图片批次处理数量</label>
+              <input
+                id="batch_size"
+                type="number"
+                value="5"
+                min="1"
+                max="20"
+                title="批量处理图片数量，提升处理效率"
+              />
+              <small style="color: var(--muted); font-size: 12px">
+                建议值：8GB内存=3张/批次，16GB内存=5张/批次，32GB内存=10张/批次<br />
+                ⚡ 批量处理图片可以提升处理效率
+              </small>
+            </div>
+          </div>
+        </div>
+
+        <!-- 配置管理 -->
+        <div class="config-section collapsible">
+          <div class="config-header" onclick="toggleConfig('saved-configs')">
+            <h3>💾 配置管理</h3>
+            <span class="toggle-icon" id="saved-configs-icon">▶</span>
+          </div>
+          <div class="config-content" id="saved-configs">
+            <div class="config-management">
+              <div class="config-subsection">
+                <h4>保存的模型配置</h4>
+                <div id="saved_models" class="config-list"></div>
+              </div>
+              <div class="config-subsection">
+                <h4>保存的自定义提示词</h4>
+                <div id="saved_prompts" class="config-list"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 提示词类型（独立折叠区） -->
+        <div class="config-section collapsible">
+          <div class="config-header" onclick="toggleConfig('prompt-config')">
+            <h3>📝 提示词类型</h3>
+            <span class="toggle-icon" id="prompt-config-icon">▶</span>
+          </div>
+          <div class="config-content" id="prompt-config">
+            <div class="field">
+              <label>提示词类型</label>
+              <select id="prompt_type">
+                <option value="pdf_extract">PDF文本提取（保持原格式）</option>
+                <option value="invoice">发票信息提取（Markdown格式）</option>
+                <option value="describe">描述图片内容</option>
+                <option value="custom">自定义提示词</option>
+              </select>
+            </div>
+
+            <div id="custom_prompt_config" style="display: none">
+              <div class="field">
+                <label>自定义提示词</label>
+                <textarea
+                  id="custom_prompt"
+                  rows="3"
+                  placeholder="请输入您的自定义提示词..."
+                ></textarea>
+              </div>
+              <div class="field">
+                <button type="button" id="save_prompt_btn" class="save-btn">
+                  💾 保存提示词
+                </button>
+              </div>
+            </div>
+
+            <div id="prompt_preview" class="field">
+              <label>当前提示词预览</label>
+              <div id="prompt_preview_content" class="prompt-preview"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="uploader">
+        <div id="dropzone" class="dropzone">
+          <p>将 PDF 或 图片拖放到此处，或点击选择</p>
+          <input id="file_input" type="file" multiple accept=".pdf,image/*" />
+        </div>
+        <button id="start_btn">开始识别</button>
+      </section>
+
+      <section>
+        <h2>任务</h2>
+        <ul id="file_list" class="file-list"></ul>
+      </section>
+
+      <section>
+        <h2>结果</h2>
+        <div id="results" class="results"></div>
+      </section>
+
+      <section>
+        <h2>历史记录</h2>
+        <div id="history_list" class="results"></div>
+      </section>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

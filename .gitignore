@@ -1,0 +1,31 @@
+# 排除输出和上传目录
+outputs/
+uploads/
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyc
+*.pyd
+*.so
+.venv/
+venv/
+.env
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# IDE 文件
+.vscode/
+.idea/
+*.swp
+
+# 日志文件
+*.log
+logs/
+
+# 临时文件
+*.tmp
+*.temp
