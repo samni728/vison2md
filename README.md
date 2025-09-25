@@ -48,8 +48,8 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 # 安装依赖（读取 pyproject.toml）
 uv sync
 
-# 启动服务（示例端口 8001）
-uv run uvicorn server.main:app --host 127.0.0.1 --port 8001 --reload
+# 启动服务（端口 8000）
+uv run uvicorn server.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 一键脚本：
@@ -57,8 +57,7 @@ uv run uvicorn server.main:app --host 127.0.0.1 --port 8001 --reload
 ```bash
 chmod +x scripts/serve.sh
 ./scripts/serve.sh
-# 或自定义端口
-PORT=8010 ./scripts/serve.sh
+# 固定端口为 8000（如需更改，请自行修改脚本或命令）
 ```
 
 ---
