@@ -15,6 +15,9 @@ services:
       - ./uploads:/app/uploads
       # 挂载配置目录，保存用户配置
       - ./config:/app/config
+      # 挂载配置文件，保存模型和提示词配置（关键修复）
+      - ./saved_configs.json:/app/saved_configs.json
+      - ./history.json:/app/history.json
     environment:
       - PYTHONPATH=/app
       - PYTHONUNBUFFERED=1
@@ -38,6 +41,9 @@ services:
       - ./outputs:/app/outputs
       - ./uploads:/app/uploads
       - ./config:/app/config
+      # 挂载配置文件，保存模型和提示词配置（关键修复）
+      - ./saved_configs.json:/app/saved_configs.json
+      - ./history.json:/app/history.json
     environment:
       - PYTHONPATH=/app
       - PYTHONUNBUFFERED=1

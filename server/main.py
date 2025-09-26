@@ -198,8 +198,16 @@ def load_saved_configs() -> dict:
 def save_configs(configs: dict):
     """保存配置到文件"""
     try:
-        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+        # 确保目录存在
+        CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+        # 先写入临时文件，然后替换，确保原子性
+        import tempfile
+        import os
+        temp_fd, temp_path = tempfile.mkstemp(prefix="saved_configs_", suffix=".json", dir=CONFIG_FILE.parent)
+        with os.fdopen(temp_fd, 'w', encoding='utf-8') as f:
             json.dump(configs, f, ensure_ascii=False, indent=2)
+        # 原子性替换
+        os.replace(temp_path, CONFIG_FILE)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"保存配置失败: {str(e)}")
 
