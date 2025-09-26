@@ -2,8 +2,9 @@
 
 # Qwen2.5VL WebUI 快速部署脚本
 # API-only模式 - 专为仅使用API调用的场景优化
+# 🆕 现在同时支持Web UI(8000)和MCP HTTP API(9000)
 
-echo "开始部署Qwen2.5VL WebUI API-only版本..."
+echo "开始部署Qwen2.5VL WebUI API-only版本（包含MCP HTTP API）..."
 
 # 检查环境
 if ! command -v docker-compose &> /dev/null; then
@@ -31,14 +32,24 @@ if [ $? -eq 0 ]; then
         echo "✅ 服务启动成功！"
         echo ""
         echo "🌐 Web界面: http://localhost:8000"
+        echo "🔧 MCP API: http://localhost:9000"
         echo "📋 API文档: http://localhost:8000/docs"
         echo ""
         echo "服务正在后台运行。"
         echo ""
+        echo "📝 服务说明："
+        echo "  - 端口8000: Web UI (人类用户界面)"
+        echo "  - 端口9000: MCP HTTP API (远程API调用)"
+        echo ""
         echo "管理命令："
         echo "  停止服务: docker-compose down"
         echo "  查看日志: docker-compose logs -f"
+        echo "  查看MCP日志: docker-compose logs -f mcp-http-api"
         echo "  重启服务: docker-compose restart"
+        echo ""
+        echo "🧪 测试MCP API:"
+        echo "  curl http://localhost:9000/"
+        echo "  curl http://localhost:9000/mcp/tools"
         echo ""
     else
         echo "❌ 服务启动失败，请检查日志"

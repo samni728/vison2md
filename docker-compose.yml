@@ -26,6 +26,26 @@ services:
       retries: 3
       start_period: 40s
 
+  # MCP HTTP API服务 - 支持远程HTTP调用
+  mcp-http-api:
+    build:
+      context: .
+      dockerfile: ${DOCKERFILE:-Dockerfile}
+    container_name: mcp-http-api
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./outputs:/app/outputs
+      - ./uploads:/app/uploads
+      - ./config:/app/config
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    command: ["python", "server/mcp_http_server.py"]
+    restart: unless-stopped
+    depends_on:
+      - vision-ai-webui
+
   # 可选：添加Redis服务用于缓存（如果需要）
   # redis:
   #   image: redis:7-alpine

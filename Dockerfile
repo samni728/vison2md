@@ -25,6 +25,9 @@ COPY requirements.txt ./
 # 安装Python依赖
 RUN pip install --no-cache-dir -r requirements.txt
 
+# 安装MCP依赖（可选）
+RUN pip install --no-cache-dir mcp || true
+
 # 复制应用代码
 COPY . .
 

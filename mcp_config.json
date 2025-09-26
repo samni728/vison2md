@@ -1,0 +1,11 @@
+{
+  "servers": {
+    "vision-ai": {
+      "command": "python",
+      "args": ["server/mcp_server.py"],
+      "env": {
+        "PYTHONPATH": "."
+      }
+    }
+  }
+}
