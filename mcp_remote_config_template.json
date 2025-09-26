@@ -1,0 +1,53 @@
+{
+  "vision_ai_remote": {
+    "base_url": "http://192.168.10.200:9000",
+    "timeout": 300,
+    "retry_attempts": 3,
+    "headers": {
+      "Content-Type": "application/json",
+      "User-Agent": "Vision-AI-Client/1.0"
+    },
+    "tools": {
+      "document_ocr": {
+        "method": "POST",
+        "endpoint": "/mcp/document_ocr",
+        "description": "PDF文档OCR识别",
+        "payload_template": {
+          "file_data": "{{base64_encoded_content}}",
+          "filename": "{{filename}}",
+          "max_pages": 10
+        }
+      },
+      "analyze_image": {
+        "method": "POST",
+        "endpoint": "/mcp/analyze_image",
+        "description": "图片内容分析",
+        "payload_template": {
+          "file_data": "{{base64_encoded_content}}",
+          "filename": "{{filename}}",
+          "analysis_type": "describe"
+        }
+      },
+      "extract_structured_data": {
+        "method": "POST",
+        "endpoint": "/mcp/extract_structured_data",
+        "description": "结构化数据提取",
+        "payload_template": {
+          "file_data": "{{base64_encoded_content}}",
+          "filename": "{{filename}}",
+          "extraction_target": "invoice"
+        }
+      },
+      "batch_process": {
+        "method": "POST",
+        "endpoint": "/mcp/batch_process",
+        "description": "批量文档处理",
+        "payload_template": {
+          "documents": "{{documents_array}}",
+          "prompt": "{{custom_prompt}}",
+          "merge_results": false
+        }
+      }
+    }
+  }
+}
