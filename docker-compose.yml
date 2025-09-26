@@ -2,7 +2,9 @@ version: "3.8"
 
 services:
   vision-ai-webui:
-    build: .
+    build:
+      context: .
+      dockerfile: ${DOCKERFILE:-Dockerfile}
     container_name: vision-ai-webui
     ports:
       - "8000:8000"

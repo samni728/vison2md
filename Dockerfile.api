@@ -1,4 +1,4 @@
-# 使用Python 3.11官方镜像作为基础镜像
+# API-only Dockerfile - 针对只使用API调用的场景，不包含MLX依赖
 FROM python:3.11-slim
 
 # 设置工作目录
@@ -9,20 +9,13 @@ ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 安装系统依赖
+# 安装系统依赖（最小化，不包含build-essential等重型工具）
 RUN apt-get update && apt-get install -y \
-    build-essential \
     curl \
-    git \
     && rm -rf /var/lib/apt/lists/*
 
-# 安装uv包管理器
-RUN pip install uv
-
-# 复制项目文件
+# 只安装API必需的依赖（按照requirements.txt）
 COPY requirements.txt ./
-
-# 安装Python依赖
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 复制应用代码

@@ -9,33 +9,83 @@
 - **智能内容过滤**：自动清理 <think> 思考段、系统噪声，产出更纯净
 - **历史记录与回溯**：记录处理项，快速打开生成的 Markdown 与原始文件
 - **现代化 WebUI**：折叠式配置面板与进度反馈，界面简洁高效
-- **容器化交付**：提供 Dockerfile 与 docker-compose，一键启动即用
+- **容器化交付**：提供**API-only**和**完整模式**两种 Docker 部署方案
 
 ---
 
 ## 🐳 Docker 部署（推荐）
+
+### 🚀 API-only 模式（轻量级，推荐用于 API 调用）
+
+> **适用场景**：服务器快速部署、k8s 集群、只调用 API 处理的场景
+
+**优势**：
+
+- ⚡ 构建速度快（跳过 MLX/torch 等依赖）
+- 📦 镜像体积小（约为完整模式的 1/3）
+- 🎯 资源消耗低，适合服务器部署
 
 ```bash
 # 1) 克隆项目
 git clone <项目地址>
 cd vision-ai-webui
 
-# 2) 启动服务
+# 2) 使用 API-only 模式启动（轻量级，镜像体积小）
+export DOCKERFILE=Dockerfile.api
+docker-compose build && docker-compose up -d
+
+# 或者使用快速部署脚本
+./快速部署.sh
+
+# 3) 访问应用
+# 浏览器打开：http://localhost:8000
+```
+
+### 🎯 完整模式（包含本地推理功能）
+
+> **适用场景**：本地高性能处理、离线环境、无网络依赖的需求
+
+**优势**：
+
+- 🔥 本地推理能力强，无网络瓶颈
+- 🏠 适合内网/离线环境
+- 💪 处理性能更优秀，延迟更低
+
+```bash
+# 1) 克隆项目
+git clone <项目地址>
+cd vision-ai-webui
+
+# 2) 启动完整服务
 docker-compose up -d
 
 # 3) 访问应用
 # 浏览器打开：http://localhost:8000
 ```
 
-查看状态与日志：
+#### 🎛️ 管理命令
 
 ```bash
+# 查看状态与日志
 docker-compose ps
 docker-compose logs -f
 docker-compose down
+
+# API-only模式一键重新部署
+DOCKERFILE=Dockerfile.api docker-compose up -d --build
 ```
 
 详细说明见：`Docker使用指南.md`
+
+#### 📊 快速决策指南
+
+| 使用场景             | 推荐模式     | 命令示例                                                |
+| -------------------- | ------------ | ------------------------------------------------------- |
+| 🖥️ 服务端快速部署    | **API-only** | `DOCKERFILE=Dockerfile.api docker-compose up -d`        |
+| 📱 生产环境 API 服务 | **API-only** | `./快速部署.sh`                                         |
+| 💻 本地开发调试      | **完整模式** | `docker-compose up`                                     |
+| 🔒 内网/离线处理     | **完整模式** | `docker-compose up -d`                                  |
+| ☁️ 云主机/K8S 部署   | **API-only** | `export DOCKERFILE=Dockerfile.api && docker-compose up` |
 
 ---
 

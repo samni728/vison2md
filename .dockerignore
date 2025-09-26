@@ -1,0 +1,46 @@
+# Python cache & venv
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyc
+*.pyd
+*.so
+.venv/
+venv/
+.env
+
+# VCS
+.git/
+.gitignore
+.gitattributes
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python packaging/cache
+*.egg-info/
+.eggs/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.hypothesis/
+
+# Editors/IDE
+.vscode/
+.idea/
+*.swp
+
+# Project data & local outputs
+outputs/
+uploads/
+config/
+
+# Node/web build (if any)
+web/node_modules/
+web/dist/
+
+# Logs
+*.log
+logs/

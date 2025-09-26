@@ -2,12 +2,18 @@
 
 ## 📖 概述
 
-本项目已完全支持 Docker 容器化部署，提供了一键启动的解决方案。通过 Docker，您可以：
+本项目已完全支持 Docker 容器化部署，提供了一键启动的解决方案。现在支持**两种部署模式**：
+
+🔸 **完整模式**：支持本地 MLX 模型推理，适用于高性能处理需求  
+🔸 **API-only 模式**：轻量级部署，仅用于 API 调用，适用于服务器快速部署
+
+通过 Docker，您可以：
 
 - 🚀 **快速部署**：无需配置 Python 环境
 - 🔒 **环境隔离**：避免依赖冲突
 - 📦 **便携部署**：在任何支持 Docker 的系统上运行
 - 🔄 **易于更新**：通过镜像更新快速升级
+- ⚡ **轻量高效**：API-only 模式对整个服务器的资源消耗更少
 
 ## 🛠️ 系统要求
 
@@ -27,14 +33,30 @@
 
 ## 🚀 快速开始
 
-### 方法一：使用 Docker Compose（推荐）
+### 方法一：API-only 模式（轻量级，推荐用于 API 调用）
 
 ```bash
 # 1. 克隆项目（如果还没有）
 git clone <项目地址>
 cd vision-ai-webui
 
-# 2. 启动服务
+# 2. 使用 API-only 模式启动服务（跳过MLX依赖）
+export DOCKERFILE=Dockerfile.api
+docker-compose build
+docker-compose up -d
+
+# 或者运行快速部署脚本
+./快速部署.sh
+```
+
+### 方法二：完整模式（包含本地 MLX 模型支持）
+
+```bash
+# 1. 克隆项目（如果还没有）
+git clone <项目地址>
+cd vision-ai-webui
+
+# 2. 启动完整服务
 docker-compose up -d
 
 # 3. 查看服务状态
@@ -44,11 +66,11 @@ docker-compose ps
 docker-compose logs -f
 ```
 
-### 方法二：使用 Docker 命令
+### 方法三：使用 Docker 命令（API-only 模式）
 
 ```bash
-# 1. 构建镜像
-docker build -t vision-ai-webui .
+# 1. 构建 API-only 镜像
+docker build -f Dockerfile.api -t vision-ai-webui-api .
 
 # 2. 运行容器
 docker run -d \
@@ -56,13 +78,34 @@ docker run -d \
   -p 8000:8000 \
   -v $(pwd)/outputs:/app/outputs \
   -v $(pwd)/uploads:/app/uploads \
-  vision-ai-webui
+  vision-ai-webui-api
 
 # 3. 查看容器状态
 docker ps
 
 # 4. 查看日志
 docker logs -f vision-ai-webui
+```
+
+### 方法四：使用 Docker 命令（完整模式）
+
+```bash
+# 1. 构建完整镜像
+docker build -t vision-ai-webui-full .
+
+# 2. 运行容器
+docker run -d \
+  --name vision-ai-webui-full \
+  -p 8000:8000 \
+  -v $(pwd)/outputs:/app/outputs \
+  -v $(pwd)/uploads:/app/uploads \
+  vision-ai-webui-full
+
+# 3. 查看容器状态
+docker ps
+
+# 4. 查看日志
+docker logs -f vision-ai-webui-full
 ```
 
 ## 🌐 访问应用
@@ -77,12 +120,61 @@ http://localhost:8000
 
 ```
 vision-ai-webui/
-├── Dockerfile              # Docker 镜像构建文件
-├── docker-compose.yml      # Docker Compose 配置
+├── Dockerfile              # 完整模式Docker镜像构建文件
+├── Dockerfile.api          # API-only模式Docker镜像构建文件
+├── docker-compose.yml      # Docker Compose 配置（支持两种模式）
+├── 快速部署.sh             # 一键API-only模式部署脚本
+├── 构建和部署指南.md        # 详细构建指南
 ├── .dockerignore           # Docker 忽略文件
 ├── outputs/                # 输出文件目录（挂载到容器）
 ├── uploads/                # 上传文件目录（挂载到容器）
 └── config/                 # 配置文件目录（挂载到容器）
+```
+
+## ⚙️ 两种部署模式详解
+
+### 🏗️ API-only 模式（Dockerfile.api）
+
+**特点**：
+
+- ⚡ **构建速度快**：只安装基础依赖，跳过 MLX/机器学习框架
+- 🎯 **镜像体积小**：通常只有完整模式的 1/3 大小
+- 🚀 **启动更快**：依赖更少，启动时间大幅缩短
+- 🔧 **只适合 API 调用**：仅用于调用外部 API 处理文档和图片
+
+**适用场景**：
+
+- 服务器资源有限的环境
+- 只需要 API 接口调用的场景
+- 轻量级 kubernetes 部署
+- 快速原型搭建
+
+### 🏗️ 完整模式（Dockerfile）
+
+**特点**：
+
+- 🔥 **功能完整**：支持本地 MLX 模型推理和 API 调用双重方式
+- 📦 **依赖完整**：包含 MLX、PyTorch 等机器学习和推理工具
+- 💪 **处理能力更强**：可在无网络的环境下完成推理
+- 🔧 **功能全面**：支持本地模型管理
+
+**适用场景**：
+
+- 本地高性能处理
+- 离线环境部署
+- 对处理速度要求严格的场景
+- 企业内网环境
+
+### 🔄 模式切换
+
+```bash
+# API-only 模式
+export DOCKERFILE=Dockerfile.api
+docker-compose build && docker-compose up -d
+
+# 完整模式
+export DOCKERFILE=Dockerfile
+docker-compose build && docker-compose up -d
 ```
 
 ## 🔧 配置说明
