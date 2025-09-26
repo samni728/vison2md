@@ -474,6 +474,12 @@ startBtn.addEventListener("click", async () => {
   if (maxPagesEl.value) form.append("max_pages", maxPagesEl.value);
   if (batchSizeEl.value) form.append("batch_size", batchSizeEl.value);
 
+  // 添加合并选项
+  const mergeOutputEl = document.getElementById("merge_output");
+  if (mergeOutputEl) {
+    form.append("merge_output", mergeOutputEl.checked);
+  }
+
   try {
     // 显示处理中状态
     progressText.textContent = "正在处理文件...";

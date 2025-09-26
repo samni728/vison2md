@@ -409,6 +409,7 @@ async def process_files(
     temperature: float = Form(0.0),
     max_pages: int = Form(10, description="PDF最大处理页数"),
     batch_size: int = Form(5, description="图片批次处理数量"),
+    merge_output: bool = Form(False, description="是否合并所有输出到单个文档"),
 ):
     if not files:
         raise HTTPException(status_code=400, detail="未接收到文件")
@@ -559,6 +560,59 @@ async def process_files(
                     result["markdown"] = f"## 图片批次 {batch_idx + 1}/{len(image_batches)}\n\n{result['markdown']}"
             
             results.extend(batch_results)
+
+    # 如果需要合并输出，创建单个合并文档
+    if merge_output and results:
+        merged_content = []
+        merged_content.append("# 合并文档处理结果\n\n")
+        merged_content.append(f"处理时间：{__import__('time').strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+        merged_content.append(f"处理文档数量：{len(results)} 个\n\n")
+        merged_content.append("---\n\n")
+        
+        # 为每个文档创建一个清晰的章节
+        for idx, result in enumerate(results, 1):
+            # 获取原始文件名（完整文件名）
+            original_filename = result.get('original_file', f'document_{idx}')
+            filename_with_ext = Path(original_filename).stem
+            upload_url = result.get('original_file_url', '')
+            
+            # 添加文档分隔标题
+            merged_content.append(f"# {idx}. {filename_with_ext}\n\n")
+            
+            # 添加原始文件信息
+            if upload_url:
+                merged_content.append(f"**原始文件：** [{original_filename}]({upload_url})\n\n")
+            else:
+                merged_content.append(f"**原始文件：** {original_filename}\n\n")
+            
+            # 添加处理结果
+            content = result.get('markdown', '')
+            if content:
+                merged_content.append(content)
+            
+            # 添加文档间分隔
+            if idx < len(results):  # 不要在最后一个文档后添加分隔
+                merged_content.append("\n\n---\n\n")
+        
+        # 保存合并文档
+        from datetime import datetime
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        merged_filename = f"合并文档_{timestamp}"
+        merged_path = save_markdown("".join(merged_content), merged_filename)
+        
+        # 创建新的结果，包含合并信息
+        merged_result = {
+            "input": f"合并处理 ({len(results)}个文档)",
+            "output_markdown": f"/outputs/{Path(merged_path).name}",
+            "saved_path": str(merged_path),
+            "markdown": "".join(merged_content),
+            "original_file": f"合并文档_{timestamp}",
+            "original_file_url": "",
+            "merged_count": len(results),
+            "merged_original_files": [r.get('original_file', '') for r in results]
+        }
+        
+        results = [merged_result]
 
     return JSONResponse({"ok": True, "results": results})
 

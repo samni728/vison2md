@@ -108,6 +108,23 @@ header p {
   line-height: 1.3;
 }
 
+/* 合并文档选项样式 */
+.field input[type="checkbox"] {
+  width: auto;
+  margin-right: 8px;
+  transform: scale(1.2);
+}
+
+.field:has(input#merge_output) label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(106, 162, 255, 0.05);
+  border: 1px solid rgba(106, 162, 255, 0.2);
+}
+
 .row {
   display: grid;
   grid-template-columns: 1fr 1fr;
