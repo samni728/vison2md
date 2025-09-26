@@ -196,20 +196,96 @@ def load_saved_configs() -> dict:
         return {"models": [], "prompts": []}
 
 def save_configs(configs: dict):
-    """保存配置到文件"""
-    try:
-        # 确保目录存在
-        CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
-        # 先写入临时文件，然后替换，确保原子性
-        import tempfile
-        import os
-        temp_fd, temp_path = tempfile.mkstemp(prefix="saved_configs_", suffix=".json", dir=CONFIG_FILE.parent)
-        with os.fdopen(temp_fd, 'w', encoding='utf-8') as f:
-            json.dump(configs, f, ensure_ascii=False, indent=2)
-        # 原子性替换
-        os.replace(temp_path, CONFIG_FILE)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"保存配置失败: {str(e)}")
+    """保存配置到文件 - Docker容器兼容版本"""
+    import os
+    import tempfile
+    import shutil
+    import time
+    
+    max_retries = 3
+    retry_delay = 0.5  # seconds
+    
+    for attempt in range(max_retries):
+        try:
+            # 确保目录存在
+            CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+            
+            # 生成配置内容
+            config_content = json.dumps(configs, ensure_ascii=False, indent=2)
+            
+            # 方法1：直接写入（最快最简单）
+            try:
+                with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+                    f.write(config_content)
+                    f.flush()
+                    os.fsync(f.fileno())
+                
+                # 验证写入成功
+                with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                    loaded_data = json.load(f)
+                    if loaded_data == configs:  # 验证数据一致性
+                        return  # 成功了
+                    else:
+                        raise Exception("数据验证失败")
+                        
+            except (OSError, IOError) as e:
+                if "Device or resource busy" in str(e):
+                    if attempt >= max_retries - 1:
+                        raise Exception("文件被持续锁定，需要检查其他进程是否在访问配置文件")
+                    time.sleep(retry_delay * (2 ** attempt))
+                    continue
+                else:
+                    raise e
+            
+            except:
+                # 文件验证失败，用临时文件方法
+                pass
+            
+            # 方法2：临时文件原子性替换（用于解决并发和锁定问题）
+            import tempfile
+            with tempfile.NamedTemporaryFile(
+                mode='w+', 
+                encoding='utf-8', 
+                suffix='.tmp',
+                dir='/tmp',  # 在系统临时目录，避免Docker文件锁定
+                delete=False
+            ) as tmp_file:
+                tmp_file.write(config_content)
+                tmp_file.flush()
+                os.fsync(tmp_file.fileno())
+                temp_name = tmp_file.name
+            
+            # 用shell mv实现原子性替换
+            import subprocess
+            try:
+                subprocess.run(['mv', temp_name, str(CONFIG_FILE)], 
+                             check=True, capture_output=True)
+            except (subprocess.CalledProcessError, FileNotFoundError):
+                # 如果mv不可用，使用python shutil
+                shutil.move(temp_name, CONFIG_FILE)
+            
+            # 最终验证文件写入
+            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                if json.load(f) == configs:
+                    return
+                else:
+                    raise Exception("文件验证失败")
+                    
+        except Exception as e:
+            if attempt < max_retries - 1:
+                time.sleep(retry_delay)
+                continue
+            else:
+                # 用户友好的错误提示
+                error_msg = str(e)
+                if "Device or resource busy" in error_msg:
+                    error_msg = "配置被锁定 - 请等待其他操作完成后再试"
+                elif "Permission denied" in error_msg:
+                    error_msg = "权限不足 - 检查Docker文件挂载权限"
+                elif "read-only" in error_msg.lower():
+                    error_msg = "配置目录只读 - 检查Docker卷权限设置"
+                    
+                raise HTTPException(status_code=500, detail=f"无法保存配置: {error_msg}")
 
 def clean_output_text(raw: str) -> str:
     # 首先移除思考过程内容（<think>标签内的所有内容）
